@@ -1,5 +1,6 @@
 from torch.utils.data import Dataset
 import torch
+import numpy as np
 
 
 class SentencesDataset(Dataset):
@@ -15,6 +16,8 @@ class SentencesDataset(Dataset):
         text = self.texts[idx]
         data = []
         for sentence in text:
-            data.append([self.w2v.wv.vocab[word].index for word in sentence if word in self.w2v.wv.vocab])
+            data.append(np.array([self.w2v.wv.vocab[word].index for word in sentence if word in self.w2v.wv.vocab]))
         label = self.labels[idx]
-        return torch.tensor(data, dtype=torch.long), torch.tensor(label, dtype=torch.long)
+        x = torch.tensor(data[0], dtype=torch.long),torch.tensor(data[1], dtype=torch.long)
+        x = np.ndarray.tolist(x)
+        return torch.tensor(x), torch.tensor(label, dtype=torch.long)
