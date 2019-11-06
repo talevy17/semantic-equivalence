@@ -10,7 +10,6 @@ from gensim.models import Word2Vec
 import torch
 import time
 import torch.optim as optim
-import torch.nn as nn
 from DataUtils import DataUtils
 
 num_of_epochs = 5
