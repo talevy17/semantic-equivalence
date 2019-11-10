@@ -16,7 +16,7 @@ num_of_epochs = 5
 dropout = 0.25
 embedded_dim = 300
 hidden_layer = 256
-empty_word = torch.from_numpy(np.zeros(embedded_dim, dtype=torch.long))
+empty_word = torch.from_numpy(np.zeros(embedded_dim, dtype=np.long))
 
 
 class Siamese(nn.Module):
@@ -47,14 +47,16 @@ class Siamese(nn.Module):
         self.embedding_length = embedding_length
         self.word_embeddings = nn.Embedding.from_pretrained(torch.FloatTensor(weights), freeze=freeze_embeddings)
         self.lstm = nn.LSTM(embedding_length, hidden_size)
-        self.label = nn.Linear(hidden_size, output_size)
-        self.liner = nn.Sequential(nn.Linear(9216, 4096), nn.Sigmoid())
-        self.out = nn.Linear(4096, 5)
+        self.label = nn.Linear(hidden_size, 512)
+        self.liner = nn.Sequential(nn.Linear(512, 128), nn.Sigmoid())
+        self.out = nn.Linear(128, output_size)
 
     def lstm_forword(self, input_sentence, batch_size=None):
         pred = self.word_embeddings(
             input_sentence)  # embedded input of shape = (batch_size, num_sequences,  embedding_length)
-        pred = pred.permute(1, 0, 2)  # input.size() = (num_sequences, batch_size, embedding_length)
+        # pred = pred.reshape(1, pred.size(0), pred.size(1))
+        pred = pred.permute(1, 0, 2)
+        # input.size() = (num_sequences, batch_size, embedding_length)
         if batch_size is None:
             h_0 = torch.zeros(1, self.batch_size, self.hidden_size)  # Initial hidden state of the LSTM
             c_0 = torch.zeros(1, self.batch_size, self.hidden_size)  # Initial cell state of the LSTM
@@ -70,9 +72,16 @@ class Siamese(nn.Module):
         x = self.liner(x)
         return x
 
+    def isOneEmpy(self,sats):
+        x1,x2 = self.split_input(sats)
+        if x1.size() == 0 or x2.size() == 0:
+            return True
+        return False
+
     def split_input(self, sentences):
-        index = (sentences == empty_word).nonzero()
-        return sentences[: index], sentences[index + 1:]
+        # index = (sentences == empty_word).nonzero()
+        index = int(sentences[0][0])
+        return torch.narrow(sentences,dim=1,start=1,length=index), torch.narrow(sentences,dim=1,start=index + 1,length= len(sentences[0]) - index - 1)
 
     def forward(self, sents):
         x1, x2 = self.split_input(sents)
@@ -80,14 +89,14 @@ class Siamese(nn.Module):
         out2 = self.forward_one(x2)
         dis = torch.abs(out1 - out2)
         out = self.out(dis)
-        return F.softmax(out)
+        return F.softmax(out,dim=1)
         # return out
 
 
 def get_accuracy(prediction, y):
     probs = torch.softmax(prediction, dim=1)
     winners = probs.argmax(dim=1)
-    correct = (winners == y.argmax(dim=1)).float()  # convert into float for division
+    correct = (winners == int(y)).float()  # convert into float for division
     acc = correct.sum() / len(correct)
     return acc
 
@@ -98,6 +107,8 @@ def train(model, loader, optimizer, criterion, epoch):
     model.train()
     print(f'Epoch: {epoch + 1:02} | Starting Training...')
     for index, batch in enumerate(loader):
+        if model.isOneEmpy(batch[0]):
+            continue
         optimizer.zero_grad()
         predictions = model(batch[0]).squeeze(1)
         loss = criterion(predictions, batch[1])
@@ -154,7 +165,7 @@ def load_w2v():
 def main(filename, train_size):
     w2v = load_w2v()
     dataset = DataUtils.load_dataset(filename, w2v)
-    train_len = len(dataset) * train_size
+    train_len = int(len(dataset) * train_size)
     test_len = len(dataset) - train_len
     train_set, test_set = random_split(dataset, [train_len, test_len])
     net_model = Siamese(batch_size=1, output_size=5, hidden_size=hidden_layer,
@@ -165,6 +176,6 @@ def main(filename, train_size):
 
 
 if __name__ == "__main__":
-    filename = "C:\\Users\\noamc\\Downloads\\sentences.txt"
+    filename = "./sentences.txt"
     train_size = 0.8
-    main(filename,train_size)
+    main(filename, train_size)

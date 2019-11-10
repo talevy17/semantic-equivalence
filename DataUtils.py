@@ -37,6 +37,6 @@ class DataUtils():
         return SentencesDataset(sants, scores, w2v)
 
 
-filename = "C:\\Users\\noamc\\Downloads\\sentences.txt"
+filename = "./sentences.txt"
 dataset = DataUtils.load_dataset(filename, word2vec)
 print(type(dataset[0][0]))
