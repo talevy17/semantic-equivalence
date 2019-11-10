@@ -16,6 +16,7 @@ num_of_epochs = 5
 dropout = 0.25
 embedded_dim = 300
 hidden_layer = 256
+empty_word = torch.from_numpy(np.zeros(embedded_dim, dtype=torch.long))
 
 
 class Siamese(nn.Module):
@@ -69,9 +70,12 @@ class Siamese(nn.Module):
         x = self.liner(x)
         return x
 
-    def forward(self, sants):
-        x1 = sants[0]
-        x2 = sants[1]
+    def split_input(self, sentences):
+        index = (sentences == empty_word).nonzero()
+        return sentences[: index], sentences[index + 1:]
+
+    def forward(self, sents):
+        x1, x2 = self.split_input(sents)
         out1 = self.forward_one(x1)
         out2 = self.forward_one(x2)
         dis = torch.abs(out1 - out2)

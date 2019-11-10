@@ -20,6 +20,6 @@ class SentencesDataset(Dataset):
     def __getitem__(self, idx):
         text = self.texts[idx]
         dim = len(text[0][0])
-        data = np.concatenate((encoder(self.w2v, text[0]), np.array(dim), encoder(self.w2v, text[1])), axis=0)
+        data = np.concatenate((encoder(self.w2v, text[0]), np.array(dim), encoder(self.w2v, text[1])), axis=1)
         label = self.labels[idx]
         return torch.from_numpy(data), torch.tensor(label, dtype=torch.long)
