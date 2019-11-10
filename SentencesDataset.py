@@ -12,6 +12,8 @@ def encoder(w2v, sentence):
 
 class SentencesDataset(Dataset):
     def __init__(self, sentences, labels, w2v):
+
+
         self.texts = sentences
         self.labels = labels
         self.w2v = w2v
