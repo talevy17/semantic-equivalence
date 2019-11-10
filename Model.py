@@ -69,7 +69,9 @@ class Siamese(nn.Module):
         x = self.liner(x)
         return x
 
-    def forward(self, x1, x2):
+    def forward(self, sants):
+        x1 = sants[0]
+        x2 = sants[1]
         out1 = self.forward_one(x1)
         out2 = self.forward_one(x2)
         dis = torch.abs(out1 - out2)
