@@ -9,6 +9,10 @@ class DataUtils():
         return pd.read_csv(filename, sep="\t", header=None, names=["score", "sant1", "sant2"])
 
     @staticmethod
+    def load_pickle(filename):
+        return pd.read_pickle(filename)
+
+    @staticmethod
     def data2pickle(filename, path_to_save):
         pd.read_csv(filename, sep="\t", header=None, names=["score", "sant1", "sant2"]).to_pickle(path_to_save)
 
@@ -32,8 +36,15 @@ class DataUtils():
         return DataUtils.process_data(DataUtils.load_data(filename))
 
     @staticmethod
-    def load_dataset(filename, w2v):
-        sants, scores = DataUtils.load_process_data(filename)
+    def load_process_pickle(filename):
+        return DataUtils.process_data(DataUtils.load_pickle(filename))
+
+    @staticmethod
+    def load_dataset(filename, w2v, pickle=False):
+        if pickle:
+            sants, scores = DataUtils.load_process_data(filename)
+        else:
+            sants, scores = DataUtils.load_process_data(filename)
         return SentencesDataset(sants, scores, w2v)
 
 
