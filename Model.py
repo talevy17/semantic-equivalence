@@ -31,6 +31,7 @@ class Siamese(nn.Module):
         #     nn.ReLU(inplace=True),
         #     nn.MaxPool2d(2),  # 64@48*48
         #     nn.Conv2d(64, 128, 7),
+        
         #     nn.ReLU(),    # 128@42*42
         #     nn.MaxPool2d(2),   # 128@21*21
         #     nn.Conv2d(128, 128, 4),
