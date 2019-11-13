@@ -21,7 +21,7 @@ empty_word = torch.from_numpy(np.zeros(embedded_dim, dtype=np.long))
 
 class Siamese(nn.Module):
 
-    def __init__(self, batch_size, output_size, hidden_size, vocab_size, embedding_length, weights,
+    def __init__(self, batch_size, output_size, hidden_size,
                  freeze_embeddings=False):
         super(Siamese, self).__init__()
         # remove the cnn
@@ -31,7 +31,7 @@ class Siamese(nn.Module):
         #     nn.ReLU(inplace=True),
         #     nn.MaxPool2d(2),  # 64@48*48
         #     nn.Conv2d(64, 128, 7),
-        
+
         #     nn.ReLU(),    # 128@42*42
         #     nn.MaxPool2d(2),   # 128@21*21
         #     nn.Conv2d(128, 128, 4),
@@ -44,12 +44,12 @@ class Siamese(nn.Module):
         self.batch_size = batch_size
         self.output_size = output_size
         self.hidden_size = hidden_size
-        self.vocab_size = vocab_size
-        self.embedding_length = embedding_length
-        self.word_embeddings = nn.Embedding.from_pretrained(torch.FloatTensor(weights), freeze=freeze_embeddings)
-        self.lstm = nn.LSTM(embedding_length, hidden_size)
-        self.label = nn.Linear(hidden_size, 512)
-        self.liner = nn.Sequential(nn.Linear(512, 128), nn.Sigmoid())
+        # self.vocab_size = vocab_size
+        # self.embedding_length = embedding_length
+        # self.word_embeddings = nn.Embedding.from_pretrained(torch.FloatTensor(weights), freeze=freeze_embeddings)
+        # self.lstm = nn.LSTM(embedding_length, hidden_size)
+        self.label = nn.Linear(embedded_dim, 512)
+        self.liner = nn.Sequential(nn.Linear(512, 128), nn.ReLU())
         self.out = nn.Linear(128, output_size)
 
     def lstm_forword(self, input_sentence, batch_size=None):
@@ -69,12 +69,13 @@ class Siamese(nn.Module):
         return final_output
 
     def forward_one(self, x):
-        x = self.lstm_forword(x)
+        # x = self.lstm_forword(x)
+        x = self.label(x)
         x = self.liner(x)
         return x
 
-    def isOneEmpy(self,sats):
-        x1,x2 = self.split_input(sats)
+    def isOneEmpy(self, sats):
+        x1, x2 = self.split_input(sats)
         if x1.size() == 0 or x2.size() == 0:
             return True
         return False
@@ -82,7 +83,8 @@ class Siamese(nn.Module):
     def split_input(self, sentences):
         # index = (sentences == empty_word).nonzero()
         index = int(sentences[0][0])
-        return torch.narrow(sentences,dim=1,start=1,length=index), torch.narrow(sentences,dim=1,start=index + 1,length= len(sentences[0]) - index - 1)
+        return torch.narrow(sentences, dim=1, start=1, length=index), torch.narrow(sentences, dim=1, start=index + 1,
+                                                                                   length=len(sentences[0]) - index - 1)
 
     def forward(self, sents):
         x1, x2 = self.split_input(sents)
@@ -90,7 +92,7 @@ class Siamese(nn.Module):
         out2 = self.forward_one(x2)
         dis = torch.abs(out1 - out2)
         out = self.out(dis)
-        return F.softmax(out,dim=1)
+        return F.softmax(out, dim=1)
         # return out
 
 
@@ -164,15 +166,13 @@ def load_w2v():
 
 
 def main(filename, train_size):
-    w2v = load_w2v()
-    dataset = DataUtils.load_dataset(filename, w2v)
+    dataset = DataUtils.load_dataset(filename)
     train_len = int(len(dataset) * train_size)
     test_len = len(dataset) - train_len
     train_set, test_set = random_split(dataset, [train_len, test_len])
-    net_model = Siamese(batch_size=1, output_size=5, hidden_size=hidden_layer,
-                        vocab_size=len(w2v.wv.vocab), embedding_length=embedded_dim, weights=w2v.wv.vectors)
+    net_model = Siamese(batch_size=1, output_size=5, hidden_size=hidden_layer)
     train_dataloader = DataLoader(train_set, batch_size=1, shuffle=True)
-    test_dataloader = DataLoader(test_set,batch_size=1,shuffle=True)
+    test_dataloader = DataLoader(test_set, batch_size=1, shuffle=True)
     iterate_model(net_model, train_dataloader, test_dataloader)
 
 
