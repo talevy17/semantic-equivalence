@@ -1,6 +1,5 @@
 import pandas as pd
 from SentencesDataset import SentencesDataset
-from Tests import word2vec
 
 
 class DataUtils():
@@ -25,8 +24,8 @@ class DataUtils():
             sant2 = data_frame.sant2[i]
             score = data_frame.score[i]
             if type(sant1) is not float and type(sant2) is not float:
-                sants1_word = sant1.split(" ")
-                sants2_word = sant2.split(" ")
+                sants1_word = str(sant1)
+                sants2_word = str(sant2)
                 sants.append((sants1_word, sants2_word))
                 scores.append(score)
         return sants, scores
@@ -40,14 +39,9 @@ class DataUtils():
         return DataUtils.process_data(DataUtils.load_pickle(filename))
 
     @staticmethod
-    def load_dataset(filename, w2v, pickle=False):
+    def load_dataset(filename, pickle=False):
         if pickle:
             sants, scores = DataUtils.load_process_data(filename)
         else:
             sants, scores = DataUtils.load_process_data(filename)
-        return SentencesDataset(sants, scores, w2v)
-
-
-filename = "./sentences.txt"
-dataset = DataUtils.load_dataset(filename, word2vec)
-print(type(dataset[0][0]))
+        return SentencesDataset(sants, scores)

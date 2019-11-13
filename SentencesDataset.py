@@ -4,13 +4,15 @@ import numpy as np
 from bert_serving.client import BertClient
 
 embedded_dim = 300
-bc = BertClient(ip='xx.xx.xx.xx')
+print("Connecting to pretrained BERT model server...\n")
+bc = BertClient(ip='127.0.0.1')
+print("Connected\n")
 
 
 def encoder(sentence):
     # return [w2v.wv.vocab[word].index for word in sentence if word in w2v.wv.vocab]
     # return torch.tensor(encoded, dtype=torch.long)
-    return bc.encode(sentence)
+    return bc.encode([sentence]).tolist()
 
 
 class SentencesDataset(Dataset):
@@ -56,8 +58,8 @@ class SentencesDataset(Dataset):
         # print(np.zeros(dim).reshape(1, dim))
         data = []
 
-        sat1 = encoder(text[0])
-        sat2 = encoder(text[1])
+        sat1 = encoder(text[0])[0]
+        sat2 = encoder(text[1])[0]
         if len(sat1) is 0 or len(sat2) is 0:
             return None, None
         x = len(sat1)
