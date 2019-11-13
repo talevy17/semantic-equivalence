@@ -14,7 +14,7 @@ from DataUtils import DataUtils
 
 num_of_epochs = 5
 dropout = 0.25
-embedded_dim = 300
+embedded_dim = 768
 hidden_layer = 256
 empty_word = torch.from_numpy(np.zeros(embedded_dim, dtype=np.long))
 
@@ -177,6 +177,6 @@ def main(filename, train_size):
 
 
 if __name__ == "__main__":
-    filename = "./sentences_small"
+    filename = "./sentences_smaller"
     train_size = 0.8
     main(filename, train_size)
