@@ -88,11 +88,16 @@ class Siamese(nn.Module):
 
     def forward(self, sents):
         x1, x2 = self.split_input(sents)
-        out1 = self.forward_one(x1)
-        out2 = self.forward_one(x2)
-        dis = torch.abs(out1 - out2)
-        out = self.out(dis)
-        return F.softmax(out, dim=1)
+        x = (x1.numpy() + x2.numpy())/2.0
+        x = torch.tensor(x)
+        x = self.label(x)
+        x = self.liner(x)
+        x = self.out(x)
+        # out1 = self.forward_one(x1)
+        # out2 = self.forward_one(x2)
+        # dis = torch.abs(out1 - out2)
+        # out = self.out(dis)
+        return F.softmax(x, dim=1)
         # return out
 
 
