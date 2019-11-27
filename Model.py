@@ -177,6 +177,6 @@ def main(filename, train_size):
 
 
 if __name__ == "__main__":
-    filename = "./sentences_smaller"
+    filename = "./sentences.txt"
     train_size = 0.8
     main(filename, train_size)
